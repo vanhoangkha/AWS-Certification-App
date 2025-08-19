@@ -1,0 +1,6 @@
+## Response mapping template for getQuestionsByFilters
+#if($context.error)
+  $util.error($context.error.message, $context.error.type)
+#end
+
+$util.toJson($context.result)

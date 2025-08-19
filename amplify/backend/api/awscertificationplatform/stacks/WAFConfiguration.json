@@ -1,0 +1,128 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "WAF configuration for AppSync API protection",
+  "Parameters": {
+    "AppSyncApiId": {
+      "Type": "String"
+    },
+    "env": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "AppSyncWebACL": {
+      "Type": "AWS::WAFv2::WebACL",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "awscertificationplatform-appsync-waf-${env}"
+        },
+        "Scope": "REGIONAL",
+        "DefaultAction": {
+          "Allow": {}
+        },
+        "Rules": [
+          {
+            "Name": "AWSManagedRulesCommonRuleSet",
+            "Priority": 1,
+            "OverrideAction": {
+              "None": {}
+            },
+            "Statement": {
+              "ManagedRuleGroupStatement": {
+                "VendorName": "AWS",
+                "Name": "AWSManagedRulesCommonRuleSet"
+              }
+            },
+            "VisibilityConfig": {
+              "SampledRequestsEnabled": true,
+              "CloudWatchMetricsEnabled": true,
+              "MetricName": "CommonRuleSetMetric"
+            }
+          },
+          {
+            "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+            "Priority": 2,
+            "OverrideAction": {
+              "None": {}
+            },
+            "Statement": {
+              "ManagedRuleGroupStatement": {
+                "VendorName": "AWS",
+                "Name": "AWSManagedRulesKnownBadInputsRuleSet"
+              }
+            },
+            "VisibilityConfig": {
+              "SampledRequestsEnabled": true,
+              "CloudWatchMetricsEnabled": true,
+              "MetricName": "KnownBadInputsRuleSetMetric"
+            }
+          },
+          {
+            "Name": "RateLimitRule",
+            "Priority": 3,
+            "Action": {
+              "Block": {}
+            },
+            "Statement": {
+              "RateBasedStatement": {
+                "Limit": 2000,
+                "AggregateKeyType": "IP"
+              }
+            },
+            "VisibilityConfig": {
+              "SampledRequestsEnabled": true,
+              "CloudWatchMetricsEnabled": true,
+              "MetricName": "RateLimitRuleMetric"
+            }
+          }
+        ],
+        "VisibilityConfig": {
+          "SampledRequestsEnabled": true,
+          "CloudWatchMetricsEnabled": true,
+          "MetricName": "AppSyncWebACLMetric"
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": {
+              "Ref": "env"
+            }
+          },
+          {
+            "Key": "Application",
+            "Value": "AWS-Certification-Platform"
+          }
+        ]
+      }
+    },
+    "AppSyncWebACLAssociation": {
+      "Type": "AWS::WAFv2::WebACLAssociation",
+      "Properties": {
+        "ResourceArn": {
+          "Fn::Sub": "arn:aws:appsync:${AWS::Region}:${AWS::AccountId}:apis/${AppSyncApiId}"
+        },
+        "WebACLArn": {
+          "Fn::GetAtt": [
+            "AppSyncWebACL",
+            "Arn"
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "WebACLId": {
+      "Value": {
+        "Ref": "AppSyncWebACL"
+      }
+    },
+    "WebACLArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AppSyncWebACL",
+          "Arn"
+        ]
+      }
+    }
+  }
+}

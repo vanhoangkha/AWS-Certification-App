@@ -1,0 +1,91 @@
+{
+  "api": {
+    "awscertificationplatform": {
+      "service": "AppSync",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [
+        {
+          "category": "auth",
+          "resourceName": "awscertificationplatform",
+          "attributes": ["UserPoolId"]
+        }
+      ],
+      "output": {
+        "authConfig": {
+          "defaultAuthentication": {
+            "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+            "userPoolConfig": {
+              "userPoolId": "authawscertificationplatform"
+            }
+          },
+          "additionalAuthenticationProviders": []
+        }
+      }
+    }
+  },
+  "auth": {
+    "awscertificationplatform": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false,
+      "frontendAuthConfig": {
+        "socialProviders": ["GOOGLE"],
+        "usernameAttributes": ["EMAIL"],
+        "signupAttributes": ["EMAIL", "NAME"],
+        "passwordProtectionSettings": {
+          "passwordPolicyMinLength": 8,
+          "passwordPolicyCharacters": []
+        },
+        "mfaConfiguration": "OPTIONAL",
+        "mfaTypes": ["SMS", "TOTP"],
+        "verificationMechanisms": ["EMAIL"]
+      }
+    }
+  },
+  "storage": {
+    "awscertplatformstorage": {
+      "service": "S3",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": []
+    }
+  },
+  "function": {
+    "questionManagement": {
+      "service": "Lambda",
+      "providerPlugin": "awscloudformation",
+      "build": true,
+      "dependsOn": [
+        {
+          "category": "api",
+          "resourceName": "awscertificationplatform",
+          "attributes": ["GraphQLAPIIdOutput"]
+        }
+      ]
+    },
+    "examEngine": {
+      "service": "Lambda",
+      "providerPlugin": "awscloudformation",
+      "build": true,
+      "dependsOn": [
+        {
+          "category": "api",
+          "resourceName": "awscertificationplatform",
+          "attributes": ["GraphQLAPIIdOutput"]
+        }
+      ]
+    },
+    "scoringEngine": {
+      "service": "Lambda",
+      "providerPlugin": "awscloudformation",
+      "build": true,
+      "dependsOn": [
+        {
+          "category": "api",
+          "resourceName": "awscertificationplatform",
+          "attributes": ["GraphQLAPIIdOutput"]
+        }
+      ]
+    }
+  }
+}

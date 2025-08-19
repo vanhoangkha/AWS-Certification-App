@@ -1,0 +1,255 @@
+# AWS Certification Practice Platform GraphQL Schema
+
+# User Profile
+type UserProfile @model @auth(rules: [
+  { allow: owner, ownerField: "userId" }
+  { allow: groups, groups: ["admin"] }
+]) {
+  userId: ID!
+  email: AWSEmail!
+  name: String!
+  targetCertifications: [String!]!
+  preferences: AWSJSON
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+# Question
+type Question @model @auth(rules: [
+  { allow: groups, groups: ["admin", "trainer"] }
+  { allow: private, operations: [read] }
+]) {
+  questionId: ID!
+  certification: String! @index(name: "byCertification")
+  domain: String! @index(name: "byDomain")
+  difficulty: Difficulty! @index(name: "byDifficulty")
+  questionText: String!
+  questionType: QuestionType!
+  options: AWSJSON! # Array of QuestionOption
+  correctAnswers: AWSJSON! # Array of correct answer IDs
+  explanation: String!
+  references: AWSJSON! # Array of Reference objects
+  tags: [String!]!
+  createdBy: String! @index(name: "byCreatedBy")
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+# Exam Session
+type ExamSession @model @auth(rules: [
+  { allow: owner, ownerField: "userId" }
+  { allow: groups, groups: ["admin"] }
+]) {
+  sessionId: ID!
+  userId: String! @index(name: "byUserId")
+  examType: ExamType!
+  certification: String!
+  questions: AWSJSON! # Array of Question IDs
+  answers: AWSJSON! # Map of questionId -> Answer
+  startTime: AWSDateTime!
+  endTime: AWSDateTime
+  timeLimit: Int! # in minutes
+  status: ExamStatus! @index(name: "byStatus")
+  markedForReview: [String!]!
+  expiresAt: AWSTimestamp # TTL field
+}
+
+# Exam Result
+type ExamResult @model @auth(rules: [
+  { allow: owner, ownerField: "userId" }
+  { allow: groups, groups: ["admin"] }
+]) {
+  resultId: ID!
+  sessionId: String!
+  userId: String! @index(name: "byUserId")
+  certification: String! @index(name: "byCertification")
+  examType: ExamType!
+  scaledScore: Int!
+  passed: Boolean!
+  domainBreakdown: AWSJSON! # Array of DomainScore
+  totalQuestions: Int!
+  correctAnswers: Int!
+  completedAt: AWSDateTime! @index(name: "byCompletedAt")
+  timeSpent: Int! # in minutes
+}
+
+# Exam Template
+type ExamTemplate @model @auth(rules: [
+  { allow: groups, groups: ["admin", "trainer"] }
+  { allow: private, operations: [read] }
+]) {
+  templateId: ID!
+  certification: String! @index(name: "byCertification")
+  name: String!
+  description: String!
+  timeLimit: Int!
+  totalQuestions: Int!
+  domainDistribution: AWSJSON! # Array of DomainDistribution
+  isActive: Boolean! @index(name: "byIsActive")
+  createdBy: String!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+# Import Job (for CSV imports)
+type ImportJob @model @auth(rules: [
+  { allow: groups, groups: ["admin", "trainer"] }
+]) {
+  jobId: ID!
+  status: ImportStatus!
+  fileName: String!
+  totalQuestions: Int!
+  processedQuestions: Int!
+  errors: AWSJSON! # Array of ImportError
+  createdBy: String!
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+# Progress Tracking
+type UserProgress @model @auth(rules: [
+  { allow: owner, ownerField: "userId" }
+  { allow: groups, groups: ["admin"] }
+]) {
+  userId: ID!
+  certification: String! @index(name: "byCertification")
+  totalAttempts: Int!
+  bestScore: Int!
+  averageScore: Float!
+  domainProgress: AWSJSON! # Array of DomainProgress
+  achievements: AWSJSON! # Array of Achievement
+  streaks: AWSJSON! # Streak data
+  lastActivity: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+# Enums
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionType {
+  MCQ # Multiple Choice Question (single answer)
+  MRQ # Multiple Response Question (multiple answers)
+}
+
+enum ExamType {
+  MOCK
+  PRACTICE
+  CUSTOM
+}
+
+enum ExamStatus {
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+  ABANDONED
+}
+
+enum ImportStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+# Custom Queries
+type Query {
+  # Get questions for exam generation
+  getQuestionsByFilters(
+    certification: String!
+    domains: [String!]
+    difficulty: Difficulty
+    limit: Int
+    nextToken: String
+  ): QuestionConnection @function(name: "questionManagement-${env}")
+
+  # Get next practice question
+  getNextPracticeQuestion(
+    certification: String!
+    domains: [String!]
+    difficulty: Difficulty
+    excludeQuestions: [String!]
+  ): Question @function(name: "questionManagement-${env}")
+
+  # Get user analytics
+  getUserAnalytics(
+    userId: String!
+    certification: String
+    timeRange: String
+  ): AWSJSON @function(name: "analyticsEngine-${env}")
+
+  # Get admin dashboard data
+  getAdminDashboard(
+    timeRange: String
+  ): AWSJSON @function(name: "analyticsEngine-${env}") @auth(rules: [
+    { allow: groups, groups: ["admin"] }
+  ])
+}
+
+# Custom Mutations
+type Mutation {
+  # Start a new exam
+  startExam(input: StartExamInput!): ExamSession 
+    @function(name: "examEngine-${env}")
+
+  # Save exam progress
+  saveExamProgress(input: SaveProgressInput!): ExamSession 
+    @function(name: "examEngine-${env}")
+
+  # Submit exam for scoring
+  submitExam(sessionId: ID!): ExamResult 
+    @function(name: "scoringEngine-${env}")
+
+  # Import questions from CSV
+  importQuestions(input: ImportQuestionsInput!): ImportJob 
+    @function(name: "questionManagement-${env}") 
+    @auth(rules: [{ allow: groups, groups: ["admin", "trainer"] }])
+
+  # Bulk operations
+  bulkUpdateQuestions(input: BulkUpdateInput!): [Question!]! 
+    @function(name: "questionManagement-${env}") 
+    @auth(rules: [{ allow: groups, groups: ["admin", "trainer"] }])
+
+  # Generate PDF report
+  generatePDFReport(resultId: ID!): String 
+    @function(name: "pdfGenerator-${env}")
+}
+
+# Input Types
+input StartExamInput {
+  certification: String!
+  examType: ExamType!
+  customOptions: CustomExamOptionsInput
+}
+
+input CustomExamOptionsInput {
+  domains: [String!]
+  difficulty: Difficulty
+  questionCount: Int
+}
+
+input SaveProgressInput {
+  sessionId: ID!
+  answers: AWSJSON!
+  markedForReview: [String!]!
+}
+
+input ImportQuestionsInput {
+  s3Key: String!
+  fileName: String!
+}
+
+input BulkUpdateInput {
+  questionIds: [ID!]!
+  updates: AWSJSON!
+}
+
+# Connection Types
+type QuestionConnection {
+  items: [Question!]!
+  nextToken: String
+  total: Int
+}

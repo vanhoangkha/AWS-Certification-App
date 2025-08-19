@@ -1,0 +1,50 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Caching configuration for AppSync API",
+  "Parameters": {
+    "AppSyncApiId": {
+      "Type": "String"
+    },
+    "env": {
+      "Type": "String"
+    }
+  },
+  "Conditions": {
+    "ShouldCreateCache": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "env"
+            },
+            "dev"
+          ]
+        }
+      ]
+    }
+  },
+  "Resources": {
+    "AppSyncApiCache": {
+      "Type": "AWS::AppSync::ApiCache",
+      "Condition": "ShouldCreateCache",
+      "Properties": {
+        "ApiId": {
+          "Ref": "AppSyncApiId"
+        },
+        "Type": "SMALL",
+        "ApiCachingBehavior": "PER_RESOLVER_CACHING",
+        "Ttl": 300,
+        "TransitEncryptionEnabled": true,
+        "AtRestEncryptionEnabled": true
+      }
+    }
+  },
+  "Outputs": {
+    "ApiCacheId": {
+      "Condition": "ShouldCreateCache",
+      "Value": {
+        "Ref": "AppSyncApiCache"
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "examengine",
+  "version": "2.0.0",
+  "description": "Lambda function for exam engine operations",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "aws-sdk": "^2.1467.0",
+    "uuid": "^9.0.0"
+  }
+}
