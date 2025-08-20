@@ -1,0 +1,10 @@
+{
+  "name": "analytics-engine",
+  "version": "1.0.0",
+  "description": "Analytics Engine Lambda Function",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.1400.0",
+    "uuid": "^9.0.0"
+  }
+}

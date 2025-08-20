@@ -1,0 +1,36 @@
+{
+  "resourceName": "awscertplatformdb",
+  "tableName": "awscertplatformdb",
+  "partitionKey": {
+    "fieldName": "PK",
+    "fieldType": "string"
+  },
+  "sortKey": {
+    "fieldName": "SK",
+    "fieldType": "string"
+  },
+  "gsi": [
+    {
+      "name": "GSI1",
+      "partitionKey": {
+        "fieldName": "GSI1PK",
+        "fieldType": "string"
+      },
+      "sortKey": {
+        "fieldName": "GSI1SK",
+        "fieldType": "string"
+      }
+    },
+    {
+      "name": "GSI2",
+      "partitionKey": {
+        "fieldName": "GSI2PK",
+        "fieldType": "string"
+      },
+      "sortKey": {
+        "fieldName": "GSI2SK",
+        "fieldType": "string"
+      }
+    }
+  ]
+}

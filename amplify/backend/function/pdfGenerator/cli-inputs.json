@@ -1,0 +1,49 @@
+{
+  "version": "1",
+  "resourceName": "pdfGenerator",
+  "functionName": "pdfGenerator",
+  "roleName": "pdfGeneratorLambdaRole",
+  "lambdaLayers": [],
+  "runtime": "nodejs18.x",
+  "timeout": 30,
+  "memorySize": 1024,
+  "build": true,
+  "dependsOn": [
+    {
+      "category": "api",
+      "resourceName": "awscertificationplatform",
+      "attributes": [
+        "GraphQLAPIIdOutput"
+      ]
+    },
+    {
+      "category": "storage",
+      "resourceName": "awscertplatformdb",
+      "attributes": [
+        "Name",
+        "Arn"
+      ]
+    },
+    {
+      "category": "storage",
+      "resourceName": "awscertplatformstorage",
+      "attributes": [
+        "BucketName"
+      ]
+    }
+  ],
+  "environmentVariables": {
+    "RESULTS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "QUESTIONS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "EXAM_SESSIONS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "PDF_BUCKET_NAME": {
+      "Ref": "storageawscertplatformstorageBucketName"
+    }
+  }
+}

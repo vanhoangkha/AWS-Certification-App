@@ -1,0 +1,40 @@
+{
+  "version": "1",
+  "resourceName": "scoringEngine",
+  "functionName": "scoringEngine",
+  "roleName": "scoringEngineLambdaRole",
+  "lambdaLayers": [],
+  "runtime": "nodejs18.x",
+  "timeout": 25,
+  "memorySize": 512,
+  "build": true,
+  "dependsOn": [
+    {
+      "category": "api",
+      "resourceName": "awscertificationplatform",
+      "attributes": [
+        "GraphQLAPIIdOutput"
+      ]
+    },
+    {
+      "category": "storage",
+      "resourceName": "awscertplatformdb",
+      "attributes": [
+        "Name",
+        "Arn"
+      ]
+    }
+  ],
+  "environmentVariables": {
+    "QUESTIONS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "EXAM_SESSIONS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "RESULTS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "EVENT_BUS_NAME": "default"
+  }
+}

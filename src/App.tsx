@@ -1,16 +1,21 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { AppLayout } from '@cloudscape-design/components'
 
 // Components
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import AppLayout from './components/layout/AppLayout'
 import LoginPage from './pages/auth/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import ExamPage from './pages/exam/ExamPage'
 import ResultsPage from './pages/results/ResultsPage'
 import AdminPage from './pages/admin/AdminPage'
 import PracticePage from './pages/practice/PracticePage'
+import ProfilePage from './pages/ProfilePage'
+import SettingsPage from './pages/SettingsPage'
+import AnalyticsPage from './pages/AnalyticsPage'
+import HelpPage from './pages/HelpPage'
+import SampleQuestionsPage from './pages/SampleQuestionsPage'
 
 // Temporary placeholder components
 const PlaceholderComponent: React.FC<{ title: string }> = ({ title }) => (
@@ -55,11 +60,9 @@ const AppContent: React.FC = () => {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <AppLayout
-                navigation={<div />} // Will be implemented later
-                content={<DashboardPage />}
-                toolsHide
-              />
+              <AppLayout>
+                <DashboardPage />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -68,7 +71,9 @@ const AppContent: React.FC = () => {
           path="/exam/:sessionId?"
           element={
             <ProtectedRoute>
-              <ExamPage />
+              <AppLayout navigationHide>
+                <ExamPage />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -77,11 +82,9 @@ const AppContent: React.FC = () => {
           path="/practice"
           element={
             <ProtectedRoute>
-              <AppLayout
-                navigation={<div />}
-                content={<PracticePage />}
-                toolsHide
-              />
+              <AppLayout>
+                <PracticePage />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -90,11 +93,9 @@ const AppContent: React.FC = () => {
           path="/results/:resultId?"
           element={
             <ProtectedRoute>
-              <AppLayout
-                navigation={<div />}
-                content={<ResultsPage />}
-                toolsHide
-              />
+              <AppLayout>
+                <ResultsPage />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -103,11 +104,64 @@ const AppContent: React.FC = () => {
           path="/admin/*"
           element={
             <ProtectedRoute requiredRole="admin">
-              <AppLayout
-                navigation={<div />}
-                content={<AdminPage />}
-                toolsHide
-              />
+              <AppLayout>
+                <AdminPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ProfilePage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SettingsPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AnalyticsPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/help"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <HelpPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/sample-questions"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <SampleQuestionsPage />
+              </AppLayout>
             </ProtectedRoute>
           }
         />

@@ -3,7 +3,7 @@
   "cognitoConfig": {
     "identityPoolName": "awscertificationplatform_identitypool",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "awscer7a8b9c0d",
+    "resourceNameTruncated": "awscer",
     "userPoolName": "awscertificationplatform_userpool",
     "autoVerifiedAttributes": [
       "email"
@@ -43,23 +43,30 @@
       "name",
       "email_verified"
     ],
-    "userpoolClientLambdaRole": "awscer7a8b9c0d_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "awscer_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "7a8b9c0d",
+    "sharedId": "awscer",
     "resourceName": "awscertificationplatform",
     "authSelections": "identityPoolAndUserPool",
     "useDefault": "manual",
     "usernameAttributes": [
       "email"
     ],
+    "userPoolGroups": true,
     "userPoolGroupList": [
       "admin",
       "trainer",
       "student"
     ],
-    "serviceName": "Cognito",
-    "usernameCaseSensitive": false,
-    "useEnabledMfas": true,
+    "adminQueries": true,
+    "triggers": {},
+    "hostedUI": true,
+    "hostedUIDomainName": "awscertificationplatform",
+    "authProvidersUserPool": [
+      "Google"
+    ],
+    "hostedUIProviderMeta": "[{\"ProviderName\":\"Google\",\"authorize_scopes\":\"openid email profile\",\"AttributeMapping\":{\"email\":\"email\",\"name\":\"name\"}}]",
+    "oAuthMetadata": "{\"AllowedOAuthFlows\":[\"code\"],\"AllowedOAuthScopes\":[\"phone\",\"email\",\"openid\",\"profile\",\"aws.cognito.signin.user.admin\"],\"CallbackURLs\":[\"http://localhost:3000/\",\"https://main.d1234567890.amplifyapp.com/\"],\"LogoutURLs\":[\"http://localhost:3000/\",\"https://main.d1234567890.amplifyapp.com/\"]}",
     "authRoleArn": {
       "Fn::GetAtt": [
         "AuthRole",
@@ -73,13 +80,6 @@
       ]
     },
     "breakCircularDependency": true,
-    "dependsOn": [],
-    "hostedUI": true,
-    "hostedUIDomainName": "awscertificationplatform",
-    "authProvidersUserPool": [
-      "Google"
-    ],
-    "hostedUIProviderMeta": "[{\"ProviderName\":\"Google\",\"authorize_scopes\":\"openid email profile\",\"AttributeMapping\":{\"email\":\"email\",\"name\":\"name\"}}]",
-    "oAuthMetadata": "{\"AllowedOAuthFlows\":[\"code\"],\"AllowedOAuthScopes\":[\"phone\",\"email\",\"openid\",\"profile\",\"aws.cognito.signin.user.admin\"],\"CallbackURLs\":[\"http://localhost:3000/\",\"https://main.d1234567890.amplifyapp.com/\"],\"LogoutURLs\":[\"http://localhost:3000/\",\"https://main.d1234567890.amplifyapp.com/\"]}"
+    "dependsOn": []
   }
 }

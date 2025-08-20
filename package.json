@@ -5,12 +5,23 @@
   "description": "AWS Certification Practice Platform - Serverless exam simulation environment",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
+    "build:check": "tsc && vite build",
     "preview": "vite preview",
     "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint src --ext ts,tsx --fix"
+    "lint:fix": "eslint src --ext ts,tsx --fix",
+    "setup": "node scripts/setup-dev.js",
+    "deploy": "amplify publish",
+    "deploy:dev": "amplify publish --environment dev",
+    "deploy:staging": "amplify publish --environment staging",
+    "deploy:prod": "amplify publish --environment prod",
+    "amplify:init": "amplify init",
+    "amplify:push": "amplify push",
+    "amplify:status": "amplify status",
+    "amplify:console": "amplify console",
+    "postinstall": "npm run setup:check"
   },
   "dependencies": {
     "@cloudscape-design/components": "^3.0.0",
@@ -23,7 +34,10 @@
     "react-router-dom": "^6.8.0",
     "@tanstack/react-query": "^5.0.0",
     "uuid": "^9.0.0",
-    "date-fns": "^2.30.0"
+    "date-fns": "^2.30.0",
+    "pdfkit": "^0.13.0",
+    "csv-parser": "^3.0.0",
+    "recharts": "^2.8.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

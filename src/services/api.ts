@@ -2,6 +2,7 @@
 // This will integrate with AppSync GraphQL API
 
 import { generateClient } from 'aws-amplify/api'
+import { isDemoMode, DemoAPI } from './demo-simple'
 import type { 
   Question, 
   QuestionInput, 
@@ -332,6 +333,10 @@ const mutations = {
 // API Service Classes
 export class QuestionAPI {
   static async getQuestion(questionId: string): Promise<Question | null> {
+    if (isDemoMode()) {
+      return DemoAPI.Question.getQuestion(questionId)
+    }
+    
     try {
       const result = await client.graphql({
         query: queries.getQuestion,
@@ -349,6 +354,10 @@ export class QuestionAPI {
     nextToken?: string
     total?: number
   }> {
+    if (isDemoMode()) {
+      return DemoAPI.Question.getQuestionsByFilters(filters)
+    }
+    
     try {
       const result = await client.graphql({
         query: queries.getQuestionsByFilters,
@@ -371,6 +380,10 @@ export class QuestionAPI {
     difficulty?: 'EASY' | 'MEDIUM' | 'HARD',
     excludeQuestions: string[] = []
   ): Promise<Question | null> {
+    if (isDemoMode()) {
+      return DemoAPI.Question.getNextPracticeQuestion(certification, domains, difficulty, excludeQuestions)
+    }
+    
     try {
       const result = await client.graphql({
         query: queries.getNextPracticeQuestion,
@@ -389,6 +402,10 @@ export class QuestionAPI {
   }
 
   static async createQuestion(input: QuestionInput): Promise<Question> {
+    if (isDemoMode()) {
+      return DemoAPI.Question.createQuestion(input)
+    }
+    
     try {
       const result = await client.graphql({
         query: mutations.createQuestion,
@@ -402,6 +419,10 @@ export class QuestionAPI {
   }
 
   static async updateQuestion(input: Partial<Question> & { questionId: string }): Promise<Question> {
+    if (isDemoMode()) {
+      return DemoAPI.Question.updateQuestion(input)
+    }
+    
     try {
       const result = await client.graphql({
         query: mutations.updateQuestion,
@@ -415,6 +436,10 @@ export class QuestionAPI {
   }
 
   static async deleteQuestion(questionId: string): Promise<void> {
+    if (isDemoMode()) {
+      return DemoAPI.Question.deleteQuestion(questionId)
+    }
+    
     try {
       await client.graphql({
         query: mutations.deleteQuestion,
@@ -429,6 +454,10 @@ export class QuestionAPI {
 
 export class ExamAPI {
   static async startExam(input: StartExamInput): Promise<ExamSession> {
+    if (isDemoMode()) {
+      return DemoAPI.Exam.startExam(input)
+    }
+    
     try {
       const result = await client.graphql({
         query: mutations.startExam,
@@ -442,6 +471,10 @@ export class ExamAPI {
   }
 
   static async getExamSession(sessionId: string): Promise<ExamSession | null> {
+    if (isDemoMode()) {
+      return DemoAPI.Exam.getExamSession(sessionId)
+    }
+    
     try {
       const result = await client.graphql({
         query: queries.getExamSession,
@@ -455,6 +488,10 @@ export class ExamAPI {
   }
 
   static async saveExamProgress(input: SaveProgressInput): Promise<ExamSession> {
+    if (isDemoMode()) {
+      return DemoAPI.Exam.saveExamProgress(input)
+    }
+    
     try {
       const result = await client.graphql({
         query: mutations.saveExamProgress,
@@ -468,6 +505,10 @@ export class ExamAPI {
   }
 
   static async submitExam(sessionId: string): Promise<ExamResult> {
+    if (isDemoMode()) {
+      return DemoAPI.Exam.submitExam(sessionId)
+    }
+    
     try {
       const result = await client.graphql({
         query: mutations.submitExam,
@@ -483,6 +524,10 @@ export class ExamAPI {
 
 export class ResultAPI {
   static async getExamResult(resultId: string): Promise<ExamResult | null> {
+    if (isDemoMode()) {
+      return DemoAPI.Result.getExamResult(resultId)
+    }
+    
     try {
       const result = await client.graphql({
         query: queries.getExamResult,
@@ -494,10 +539,28 @@ export class ResultAPI {
       throw error
     }
   }
+
+  static async getUserResults(userId: string): Promise<ExamResult[]> {
+    if (isDemoMode()) {
+      return DemoAPI.Result.getUserResults(userId)
+    }
+    
+    try {
+      // This would need a proper GraphQL query in real implementation
+      return []
+    } catch (error) {
+      console.error('Error fetching user results:', error)
+      throw error
+    }
+  }
 }
 
 export class UserAPI {
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
+    if (isDemoMode()) {
+      return DemoAPI.User.getUserProfile(userId)
+    }
+    
     try {
       const result = await client.graphql({
         query: queries.getUserProfile,
@@ -511,6 +574,10 @@ export class UserAPI {
   }
 
   static async createUserProfile(input: Omit<UserProfile, 'createdAt' | 'updatedAt'>): Promise<UserProfile> {
+    if (isDemoMode()) {
+      return DemoAPI.User.createUserProfile(input)
+    }
+    
     try {
       const result = await client.graphql({
         query: mutations.createUserProfile,
@@ -524,6 +591,10 @@ export class UserAPI {
   }
 
   static async updateUserProfile(input: Partial<UserProfile> & { userId: string }): Promise<UserProfile> {
+    if (isDemoMode()) {
+      return DemoAPI.User.updateUserProfile(input)
+    }
+    
     try {
       const result = await client.graphql({
         query: mutations.updateUserProfile,

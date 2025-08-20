@@ -1,11 +1,10 @@
 {
-  "name": "scoringengine",
-  "version": "2.0.0",
-  "description": "Lambda function for exam scoring operations",
+  "name": "scoring-engine",
+  "version": "1.0.0",
+  "description": "Scoring Engine Lambda Function",
   "main": "index.js",
-  "license": "Apache-2.0",
   "dependencies": {
-    "aws-sdk": "^2.1467.0",
+    "aws-sdk": "^2.1400.0",
     "uuid": "^9.0.0"
   }
 }

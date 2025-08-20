@@ -1,0 +1,56 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-awscertificationplatform-dev-authRole",
+      "UnauthRoleName": "amplify-awscertificationplatform-dev-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::ACCOUNT_ID:role/amplify-awscertificationplatform-dev-authRole",
+      "UnauthRoleArn": "arn:aws:iam::ACCOUNT_ID:role/amplify-awscertificationplatform-dev-unauthRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-awscertificationplatform-dev-deployment",
+      "StackName": "amplify-awscertificationplatform-dev",
+      "StackId": "arn:aws:cloudformation:us-east-1:ACCOUNT_ID:stack/amplify-awscertificationplatform-dev/STACK_ID"
+    },
+    "categories": {
+      "auth": {
+        "awscertificationplatform": {}
+      },
+      "api": {
+        "awscertificationplatform": {}
+      },
+      "storage": {
+        "awscertplatformstorage": {},
+        "awscertplatformdb": {}
+      },
+      "function": {
+        "questionManagement": {},
+        "examEngine": {},
+        "scoringEngine": {},
+        "analyticsEngine": {},
+        "pdfGenerator": {}
+      }
+    }
+  },
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-awscertificationplatform-staging-authRole",
+      "UnauthRoleName": "amplify-awscertificationplatform-staging-unauthRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-awscertificationplatform-staging-deployment",
+      "StackName": "amplify-awscertificationplatform-staging"
+    }
+  },
+  "prod": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-awscertificationplatform-prod-authRole",
+      "UnauthRoleName": "amplify-awscertificationplatform-prod-unauthRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-awscertificationplatform-prod-deployment",
+      "StackName": "amplify-awscertificationplatform-prod"
+    },
+    "categories": {
+      "auth": {
+        "awscertificationplatform": {}
+      }
+    }
+  }
+}

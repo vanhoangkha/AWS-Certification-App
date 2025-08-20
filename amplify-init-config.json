@@ -1,0 +1,13 @@
+{
+  "projectName": "awscertificationplatform",
+  "envName": "dev",
+  "defaultEditor": "code",
+  "appType": "javascript",
+  "framework": "react",
+  "srcDir": "src",
+  "distDir": "dist",
+  "buildCommand": "npm run build",
+  "startCommand": "npm run dev",
+  "useProfile": true,
+  "profileName": "default"
+}

@@ -140,3 +140,36 @@ The AWS Certification Practice Platform is a comprehensive serverless web applic
 2. WHEN API calls are made THEN the system SHALL validate requests through WAF protection
 3. WHEN permissions are assigned THEN the system SHALL follow IAM least privilege principles
 4. WHEN security events occur THEN the system SHALL log all activities for audit purposes
+
+### Requirement 13
+
+**User Story:** As a certification candidate, I want to receive AI-powered study recommendations, so that I can optimize my preparation strategy based on my performance patterns.
+
+#### Acceptance Criteria
+
+1. WHEN a candidate completes multiple exams THEN the system SHALL analyze performance patterns using machine learning
+2. WHEN weak areas are identified THEN the system SHALL recommend specific study materials and practice questions
+3. WHEN study recommendations are generated THEN the system SHALL integrate with AWS Bedrock for intelligent content suggestions
+4. WHEN learning paths are created THEN the system SHALL adapt based on user progress and performance improvements
+
+### Requirement 14
+
+**User Story:** As a certification candidate, I want to access the platform on mobile devices with offline capability, so that I can study anywhere without internet connectivity.
+
+#### Acceptance Criteria
+
+1. WHEN using mobile devices THEN the system SHALL provide responsive design optimized for touch interfaces
+2. WHEN offline mode is enabled THEN the system SHALL cache questions and allow offline practice
+3. WHEN connectivity is restored THEN the system SHALL sync progress and results automatically
+4. WHEN mobile app is used THEN the system SHALL provide push notifications for study reminders
+
+### Requirement 15
+
+**User Story:** As an administrator, I want to implement advanced proctoring features, so that I can ensure exam integrity for high-stakes assessments.
+
+#### Acceptance Criteria
+
+1. WHEN proctored exams are enabled THEN the system SHALL integrate with webcam monitoring
+2. WHEN suspicious behavior is detected THEN the system SHALL flag incidents for review
+3. WHEN screen sharing is attempted THEN the system SHALL prevent or detect such activities
+4. WHEN exam environment is monitored THEN the system SHALL ensure compliance with certification standards

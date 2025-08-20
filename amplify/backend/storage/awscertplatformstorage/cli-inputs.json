@@ -1,0 +1,26 @@
+{
+  "resourceName": "awscertplatformstorage",
+  "policyUUID": "a1b2c3d4",
+  "bucketName": "awscertificationplatform-storage",
+  "storageAccess": "authAndGuest",
+  "guestAccess": [
+    "READ"
+  ],
+  "authAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "triggerFunction": "NONE",
+  "groupAccess": {
+    "admin": [
+      "CREATE_AND_UPDATE",
+      "READ",
+      "DELETE"
+    ],
+    "trainer": [
+      "CREATE_AND_UPDATE",
+      "READ"
+    ]
+  }
+}

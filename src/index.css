@@ -1,290 +1,172 @@
-/* Global styles for AWS Certification Practice Platform */
+/* AWS Certification Platform Custom Styles */
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-/* Reset and base styles */
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  padding: 0;
-  min-height: 100vh;
+  font-family: 'Amazon Ember', 'Helvetica Neue', Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #fafbfc;
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Cloudscape overrides */
-.awsui-app-layout {
-  min-height: 100vh;
+/* Custom AWS-style gradients */
+.aws-gradient-primary {
+  background: linear-gradient(135deg, #FF9900 0%, #FF6600 100%);
 }
 
-/* Custom utility classes */
-.full-height {
-  height: 100vh;
+.aws-gradient-secondary {
+  background: linear-gradient(135deg, #232F3E 0%, #131A22 100%);
 }
 
-.full-width {
-  width: 100%;
+.aws-gradient-blue {
+  background: linear-gradient(135deg, #146EB4 0%, #0F5582 100%);
 }
 
-.text-center {
-  text-align: center;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.flex-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.flex-row {
-  display: flex;
-  flex-direction: row;
-}
-
-.gap-sm {
-  gap: 8px;
-}
-
-.gap-md {
-  gap: 16px;
-}
-
-.gap-lg {
-  gap: 24px;
-}
-
-/* Exam interface specific styles */
-.exam-container {
-  height: 100vh;
-  overflow: hidden;
-}
-
-.exam-header {
-  border-bottom: 1px solid var(--color-border-divider-default);
-  padding: 16px;
-  background: var(--color-background-container-content);
-}
-
-.exam-content {
-  display: flex;
-  height: calc(100vh - 80px);
-}
-
-.exam-main {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
-}
-
-.exam-sidebar {
-  width: 300px;
-  border-left: 1px solid var(--color-border-divider-default);
-  background: var(--color-background-container-content);
-  overflow-y: auto;
-}
-
-.question-navigator {
-  padding: 16px;
-}
-
-.question-nav-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  margin: 4px;
-  border: 1px solid var(--color-border-control-default);
-  border-radius: 4px;
-  cursor: pointer;
+/* Enhanced card shadows */
+.enhanced-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
   transition: all 0.2s ease;
 }
 
-.question-nav-item:hover {
-  background: var(--color-background-control-default);
+.enhanced-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
-.question-nav-item.current {
-  background: var(--color-background-status-info);
-  border-color: var(--color-border-status-info);
-  color: var(--color-text-status-info);
+/* Professional button styles */
+.professional-button {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-.question-nav-item.answered {
-  background: var(--color-background-status-success);
-  border-color: var(--color-border-status-success);
-  color: var(--color-text-status-success);
+.professional-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.question-nav-item.marked {
-  background: var(--color-background-status-warning);
-  border-color: var(--color-border-status-warning);
-  color: var(--color-text-status-warning);
+/* Status indicators */
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
 }
 
-/* Timer styles */
+.status-success {
+  background-color: #037F0C;
+}
+
+.status-warning {
+  background-color: #FF9900;
+}
+
+.status-error {
+  background-color: #D13212;
+}
+
+.status-info {
+  background-color: #146EB4;
+}
+
+/* Exam interface specific styles */
+.exam-interface {
+  font-family: 'Amazon Ember', monospace;
+}
+
+.exam-question {
+  line-height: 1.6;
+  font-size: 16px;
+}
+
 .exam-timer {
   font-family: 'Courier New', monospace;
-  font-size: 18px;
   font-weight: bold;
+  letter-spacing: 1px;
 }
 
-.exam-timer.warning {
-  color: var(--color-text-status-warning);
-}
-
-.exam-timer.critical {
-  color: var(--color-text-status-error);
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
+/* Progress animations */
+@keyframes progressPulse {
   0% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.7; }
   100% { opacity: 1; }
 }
 
-/* Question display styles */
-.question-text {
-  font-size: 16px;
-  line-height: 1.6;
-  margin-bottom: 24px;
+.progress-pulse {
+  animation: progressPulse 2s ease-in-out infinite;
 }
 
-.question-options {
-  margin: 24px 0;
-}
-
-.question-option {
-  margin-bottom: 12px;
-}
-
-/* Results display styles */
-.score-display {
-  text-align: center;
-  padding: 32px;
-}
-
-.scaled-score {
-  font-size: 48px;
-  font-weight: bold;
-  margin: 16px 0;
-}
-
-.scaled-score.pass {
-  color: var(--color-text-status-success);
-}
-
-.scaled-score.fail {
-  color: var(--color-text-status-error);
-}
-
-.pass-indicator {
-  font-size: 24px;
-  font-weight: bold;
-  margin: 16px 0;
-}
-
-.pass-indicator.pass {
-  color: var(--color-text-status-success);
-}
-
-.pass-indicator.fail {
-  color: var(--color-text-status-error);
-}
-
-/* Domain breakdown styles */
-.domain-breakdown {
-  margin: 24px 0;
-}
-
-.domain-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--color-border-divider-default);
-}
-
-.domain-name {
-  font-weight: 500;
-}
-
-.domain-score {
-  font-weight: bold;
-}
-
-/* Loading and error states */
-.loading-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-}
-
-.error-container {
-  padding: 24px;
-  text-align: center;
-  color: var(--color-text-status-error);
-}
-
-/* Responsive design */
+/* Responsive utilities */
 @media (max-width: 768px) {
-  .exam-content {
-    flex-direction: column;
+  .mobile-stack {
+    flex-direction: column !important;
   }
   
-  .exam-sidebar {
-    width: 100%;
-    height: 200px;
-    border-left: none;
-    border-top: 1px solid var(--color-border-divider-default);
-  }
-  
-  .exam-main {
-    height: calc(100vh - 280px);
+  .mobile-full-width {
+    width: 100% !important;
   }
 }
 
-/* Print styles for PDF export */
-@media print {
-  .exam-sidebar,
-  .exam-header .awsui-button,
-  .no-print {
-    display: none !important;
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Focus states for accessibility */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid #146EB4;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .enhanced-card {
+    border: 2px solid #000;
   }
-  
-  .exam-main {
-    height: auto;
-    overflow: visible;
-  }
-  
-  body {
-    background: white;
-    color: black;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

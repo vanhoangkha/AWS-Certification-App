@@ -1,298 +1,455 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  AppLayout,
-  Alert,
-  Box,
+  Container,
+  Header,
   SpaceBetween,
+  Button,
+  Box,
+  Grid,
+  ColumnLayout,
+  Alert,
   Modal,
-  Button
-} from '@cloudscape-design/components'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useExamSession, useSaveExamProgress, useSubmitExam, useAutoSaveExamProgress } from '@/hooks/useExams'
-import ExamHeader from './ExamHeader'
-import QuestionDisplay from './QuestionDisplay'
-import ExamNavigator from './ExamNavigator'
-import ExamControls from './ExamControls'
-import ExamReviewModal from './ExamReviewModal'
-import type { Answer } from '@/types'
+  ProgressBar,
+  Badge,
+  StatusIndicator
+} from '@cloudscape-design/components';
+import { Question, ExamSession } from '@/types';
+import { DemoAPI } from '@/services/demo';
 
-const ExamInterface: React.FC = () => {
-  const { sessionId } = useParams<{ sessionId: string }>()
-  const navigate = useNavigate()
-  
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, Answer>>({})
-  const [markedForReview, setMarkedForReview] = useState<string[]>([])
-  const [showReviewModal, setShowReviewModal] = useState(false)
-  const [showEndExamModal, setShowEndExamModal] = useState(false)
-  const [questionStartTimes, setQuestionStartTimes] = useState<Record<number, number>>({})
+interface ExamInterfaceProps {
+  sessionId: string;
+  onExamComplete: (resultId: string) => void;
+  onExamExit: () => void;
+}
 
-  // Hooks
-  const { data: examSession, isLoading, error } = useExamSession(sessionId!)
-  const saveProgressMutation = useSaveExamProgress()
-  const submitExamMutation = useSubmitExam()
+const ExamInterface: React.FC<ExamInterfaceProps> = ({ 
+  sessionId, 
+  onExamComplete, 
+  onExamExit 
+}) => {
+  const [session, setSession] = useState<ExamSession | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, number[]>>({});
+  const [markedForReview, setMarkedForReview] = useState<string[]>([]);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [autoSubmitting, setAutoSubmitting] = useState(false);
+
+  // Load exam session and questions
+  useEffect(() => {
+    loadExamSession();
+  }, [sessionId]);
+
+  // Timer effect
+  useEffect(() => {
+    if (!session || session.status !== 'IN_PROGRESS') return;
+
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const startTime = new Date(session.startTime).getTime();
+      const timeLimit = session.timeLimit * 60 * 1000; // Convert to milliseconds
+      const elapsed = now - startTime;
+      const remaining = Math.max(0, timeLimit - elapsed);
+
+      setTimeRemaining(remaining);
+
+      // Auto-submit when time is up
+      if (remaining <= 0 && !autoSubmitting) {
+        setAutoSubmitting(true);
+        handleAutoSubmit();
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [session, autoSubmitting]);
 
   // Auto-save progress every 30 seconds
-  useAutoSaveExamProgress(
-    sessionId!,
-    answers,
-    markedForReview,
-    !!examSession && examSession.status === 'IN_PROGRESS'
-  )
-
-  // Initialize state from exam session
   useEffect(() => {
-    if (examSession) {
-      setAnswers(examSession.answers)
-      setMarkedForReview(examSession.markedForReview)
-      setQuestionStartTimes({ [currentQuestionIndex]: Date.now() })
+    if (!session || session.status !== 'IN_PROGRESS') return;
+
+    const autoSave = setInterval(() => {
+      saveProgress();
+    }, 30000);
+
+    return () => clearInterval(autoSave);
+  }, [session, answers, markedForReview]);
+
+  const loadExamSession = async () => {
+    try {
+      setLoading(true);
+      const examSession = await DemoAPI.Exam.getExamSession(sessionId);
+      if (!examSession) {
+        throw new Error('Exam session not found');
+      }
+
+      setSession(examSession);
+      setAnswers(examSession.answers);
+      setMarkedForReview(examSession.markedForReview);
+
+      // Load questions
+      const questionPromises = examSession.questions.map(qId => 
+        DemoAPI.Question.getQuestion(qId)
+      );
+      const loadedQuestions = await Promise.all(questionPromises);
+      setQuestions(loadedQuestions.filter(q => q !== null) as Question[]);
+
+    } catch (error) {
+      console.error('Failed to load exam session:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [examSession, currentQuestionIndex])
+  };
 
-  // Track time spent on each question
-  useEffect(() => {
-    setQuestionStartTimes(prev => ({
-      ...prev,
-      [currentQuestionIndex]: Date.now()
-    }))
-  }, [currentQuestionIndex])
-
-  const handleAnswerChange = useCallback((answer: Answer) => {
-    setAnswers(prev => ({
-      ...prev,
-      [answer.questionId]: answer
-    }))
-  }, [])
-
-  const handleQuestionSelect = useCallback((index: number) => {
-    setCurrentQuestionIndex(index)
-  }, [])
-
-  const handlePrevious = useCallback(() => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1)
-    }
-  }, [currentQuestionIndex])
-
-  const handleNext = useCallback(() => {
-    if (currentQuestionIndex < (examSession?.questions.length || 0) - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1)
-    }
-  }, [currentQuestionIndex, examSession])
-
-  const handleMarkForReview = useCallback((questionId: string) => {
-    setMarkedForReview(prev => [...prev, questionId])
-  }, [])
-
-  const handleUnmarkForReview = useCallback((questionId: string) => {
-    setMarkedForReview(prev => prev.filter(id => id !== questionId))
-  }, [])
-
-  const handleEndExam = useCallback(() => {
-    setShowEndExamModal(true)
-  }, [])
-
-  const handleSubmitExam = useCallback(async () => {
-    if (!sessionId) return
+  const saveProgress = async () => {
+    if (!session) return;
 
     try {
-      // Save final progress before submitting
-      await saveProgressMutation.mutateAsync({
-        sessionId,
+      await DemoAPI.Exam.saveExamProgress({
+        sessionId: session.sessionId,
         answers,
         markedForReview
-      })
-
-      // Submit exam
-      const result = await submitExamMutation.mutateAsync(sessionId)
-      
-      // Navigate to results page
-      navigate(`/results/${result.resultId}`)
+      });
     } catch (error) {
-      console.error('Failed to submit exam:', error)
+      console.error('Failed to save progress:', error);
     }
-  }, [sessionId, answers, markedForReview, saveProgressMutation, submitExamMutation, navigate])
+  };
 
-  const handleAutoSubmit = useCallback(() => {
-    // Auto-submit when time expires
-    handleSubmitExam()
-  }, [handleSubmitExam])
+  const handleAnswerChange = (questionId: string, selectedAnswers: number[]) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: selectedAnswers
+    }));
+  };
 
-  if (isLoading) {
+  const handleMarkForReview = (questionId: string) => {
+    setMarkedForReview(prev => {
+      if (prev.includes(questionId)) {
+        return prev.filter(id => id !== questionId);
+      } else {
+        return [...prev, questionId];
+      }
+    });
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(prev => prev - 1);
+    }
+  };
+
+  const handleQuestionNavigation = (index: number) => {
+    setCurrentQuestionIndex(index);
+  };
+
+  const handleSubmitExam = async () => {
+    try {
+      await saveProgress();
+      const result = await DemoAPI.Exam.submitExam(sessionId);
+      onExamComplete(result.resultId);
+    } catch (error) {
+      console.error('Failed to submit exam:', error);
+    }
+  };
+
+  const handleAutoSubmit = async () => {
+    try {
+      await saveProgress();
+      const result = await DemoAPI.Exam.submitExam(sessionId);
+      onExamComplete(result.resultId);
+    } catch (error) {
+      console.error('Failed to auto-submit exam:', error);
+    }
+  };
+
+  const formatTime = (milliseconds: number) => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const getQuestionStatus = (questionId: string, index: number) => {
+    const isAnswered = answers[questionId] && answers[questionId].length > 0;
+    const isMarked = markedForReview.includes(questionId);
+    const isCurrent = index === currentQuestionIndex;
+
+    if (isCurrent) return 'current';
+    if (isMarked) return 'marked';
+    if (isAnswered) return 'answered';
+    return 'unanswered';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'current': return 'blue';
+      case 'answered': return 'green';
+      case 'marked': return 'red';
+      default: return 'grey';
+    }
+  };
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const progress = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
+  const answeredCount = Object.keys(answers).filter(qId => answers[qId] && answers[qId].length > 0).length;
+
+  if (loading) {
     return (
-      <div className="flex-center full-height">
-        <Box>Loading exam...</Box>
-      </div>
-    )
+      <Container>
+        <Box textAlign="center" padding="xxl">
+          <StatusIndicator type="loading">Loading exam...</StatusIndicator>
+        </Box>
+      </Container>
+    );
   }
 
-  if (error || !examSession) {
+  if (!session || !currentQuestion) {
     return (
-      <div className="flex-center full-height">
-        <Alert type="error" header="Error Loading Exam">
-          {error?.message || 'Exam session not found'}
+      <Container>
+        <Alert type="error">
+          Failed to load exam session. Please try again.
         </Alert>
-      </div>
-    )
-  }
-
-  if (examSession.status !== 'IN_PROGRESS') {
-    return (
-      <div className="flex-center full-height">
-        <Alert type="warning" header="Exam Not Available">
-          This exam session is no longer active.
-        </Alert>
-      </div>
-    )
-  }
-
-  const currentQuestion = examSession.questions[currentQuestionIndex]
-  const currentQuestionData = examSession.questions.find(q => q.questionId === currentQuestion)
-  const currentAnswer = answers[currentQuestion]
-  const isCurrentMarked = markedForReview.includes(currentQuestion)
-  const timeSpentOnQuestion = questionStartTimes[currentQuestionIndex] 
-    ? Math.floor((Date.now() - questionStartTimes[currentQuestionIndex]) / 1000)
-    : 0
-
-  // Create updated exam session for components
-  const updatedExamSession = {
-    ...examSession,
-    answers,
-    markedForReview
+      </Container>
+    );
   }
 
   return (
-    <div className="exam-container">
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Exam Header */}
-      <ExamHeader
-        examSession={updatedExamSession}
-        currentQuestionIndex={currentQuestionIndex}
-        onEndExam={handleEndExam}
-        onReviewMode={() => setShowReviewModal(true)}
-        showReviewButton={examSession.examType === 'MOCK'}
-      />
+      <Box padding="s" variant="outlined">
+        <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
+          <Box>
+            <Header variant="h3">{session.certification} Exam</Header>
+            <Badge color="blue">{session.examType}</Badge>
+          </Box>
+          <Box textAlign="center">
+            <Header variant="h3">
+              Question {currentQuestionIndex + 1} of {questions.length}
+            </Header>
+            <ProgressBar value={progress} />
+          </Box>
+          <Box textAlign="right">
+            <Header variant="h3" color={timeRemaining < 300000 ? 'error' : 'default'}>
+              {formatTime(timeRemaining)}
+            </Header>
+            <div>Answered: {answeredCount}/{questions.length}</div>
+          </Box>
+        </Grid>
+      </Box>
 
-      {/* Main Exam Content */}
-      <div className="exam-content">
-        <AppLayout
-          navigationHide={false}
-          navigation={
-            <ExamNavigator
-              examSession={updatedExamSession}
-              currentQuestionIndex={currentQuestionIndex}
-              onQuestionSelect={handleQuestionSelect}
-              onMarkForReview={handleMarkForReview}
-              onUnmarkForReview={handleUnmarkForReview}
-            />
-          }
-          content={
-            <div className="exam-main">
-              <SpaceBetween direction="vertical" size="l">
-                {/* Question Display */}
-                {currentQuestionData && (
-                  <QuestionDisplay
-                    question={currentQuestionData}
-                    questionNumber={currentQuestionIndex + 1}
-                    totalQuestions={examSession.questions.length}
-                    currentAnswer={currentAnswer}
-                    onAnswerChange={handleAnswerChange}
-                    showExplanation={examSession.examType === 'PRACTICE'}
-                    showCorrectAnswer={false}
-                    timeSpentOnQuestion={timeSpentOnQuestion}
-                  />
+      {/* Main Content */}
+      <div style={{ flex: 1, display: 'flex' }}>
+        {/* Question Content */}
+        <div style={{ flex: 1, padding: '24px' }}>
+          <SpaceBetween direction="vertical" size="l">
+            {/* Question Text */}
+            <Container>
+              <Header variant="h2">
+                Question {currentQuestionIndex + 1}
+                {markedForReview.includes(currentQuestion.questionId) && (
+                  <Badge color="red" style={{ marginLeft: '8px' }}>Marked for Review</Badge>
                 )}
+              </Header>
+              <Box fontSize="body-m" padding={{ vertical: 'm' }}>
+                {currentQuestion.questionText}
+              </Box>
+            </Container>
 
-                {/* Exam Controls */}
-                <ExamControls
-                  currentQuestionIndex={currentQuestionIndex}
-                  totalQuestions={examSession.questions.length}
-                  onPrevious={handlePrevious}
-                  onNext={handleNext}
-                  onMarkForReview={() => handleMarkForReview(currentQuestion)}
-                  onUnmarkForReview={() => handleUnmarkForReview(currentQuestion)}
-                  onEndExam={handleEndExam}
-                  isMarkedForReview={isCurrentMarked}
-                  hasAnswer={!!currentAnswer}
-                  isFirstQuestion={currentQuestionIndex === 0}
-                  isLastQuestion={currentQuestionIndex === examSession.questions.length - 1}
-                  disabled={saveProgressMutation.isPending || submitExamMutation.isPending}
-                />
+            {/* Answer Options */}
+            <Container>
+              <SpaceBetween direction="vertical" size="s">
+                {currentQuestion.options.map((option, index) => {
+                  const isSelected = answers[currentQuestion.questionId]?.includes(index) || false;
+                  const isMultiSelect = currentQuestion.questionType === 'MULTIPLE_SELECT';
+
+                  return (
+                    <Box
+                      key={index}
+                      padding="s"
+                      variant={isSelected ? 'highlighted' : 'default'}
+                      onClick={() => {
+                        const currentAnswers = answers[currentQuestion.questionId] || [];
+                        let newAnswers: number[];
+
+                        if (isMultiSelect) {
+                          if (isSelected) {
+                            newAnswers = currentAnswers.filter(a => a !== index);
+                          } else {
+                            newAnswers = [...currentAnswers, index];
+                          }
+                        } else {
+                          newAnswers = isSelected ? [] : [index];
+                        }
+
+                        handleAnswerChange(currentQuestion.questionId, newAnswers);
+                      }}
+                      style={{ cursor: 'pointer', border: isSelected ? '2px solid #0073bb' : '1px solid #e9ebed' }}
+                    >
+                      <SpaceBetween direction="horizontal" size="s">
+                        <Badge color={isSelected ? 'blue' : 'grey'}>
+                          {String.fromCharCode(65 + index)}
+                        </Badge>
+                        <span>{option}</span>
+                      </SpaceBetween>
+                    </Box>
+                  );
+                })}
               </SpaceBetween>
+            </Container>
+
+            {/* Navigation Controls */}
+            <Box>
+              <SpaceBetween direction="horizontal" size="s">
+                <Button
+                  variant="normal"
+                  disabled={currentQuestionIndex === 0}
+                  onClick={handlePreviousQuestion}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="normal"
+                  onClick={() => handleMarkForReview(currentQuestion.questionId)}
+                >
+                  {markedForReview.includes(currentQuestion.questionId) ? 'Unmark' : 'Mark for Review'}
+                </Button>
+                <Button
+                  variant="normal"
+                  disabled={currentQuestionIndex === questions.length - 1}
+                  onClick={handleNextQuestion}
+                >
+                  Next
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowSubmitModal(true)}
+                >
+                  End Exam
+                </Button>
+                <Button
+                  variant="link"
+                  onClick={() => setShowExitModal(true)}
+                >
+                  Exit
+                </Button>
+              </SpaceBetween>
+            </Box>
+          </SpaceBetween>
+        </div>
+
+        {/* Question Navigator Sidebar */}
+        <Box padding="s" variant="outlined" style={{ width: '250px', overflowY: 'auto' }}>
+          <Header variant="h4">Question Navigator</Header>
+          <SpaceBetween direction="vertical" size="xs">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+              {questions.map((question, index) => {
+                const status = getQuestionStatus(question.questionId, index);
+                return (
+                  <Button
+                    key={question.questionId}
+                    variant={status === 'current' ? 'primary' : 'normal'}
+                    onClick={() => handleQuestionNavigation(index)}
+                    style={{
+                      minWidth: '40px',
+                      backgroundColor: status === 'answered' ? '#d4edda' : 
+                                     status === 'marked' ? '#f8d7da' : 'transparent'
+                    }}
+                  >
+                    {index + 1}
+                  </Button>
+                );
+              })}
             </div>
-          }
-          toolsHide={true}
-        />
+            
+            <Box padding={{ top: 's' }}>
+              <SpaceBetween direction="vertical" size="xs">
+                <div><Badge color="blue">Current</Badge> Current Question</div>
+                <div><Badge color="green">Answered</Badge> Answered ({answeredCount})</div>
+                <div><Badge color="red">Marked</Badge> Marked for Review ({markedForReview.length})</div>
+                <div><Badge color="grey">Unanswered</Badge> Unanswered ({questions.length - answeredCount})</div>
+              </SpaceBetween>
+            </Box>
+          </SpaceBetween>
+        </Box>
       </div>
 
-      {/* Review Modal */}
-      <ExamReviewModal
-        visible={showReviewModal}
-        examSession={updatedExamSession}
-        onDismiss={() => setShowReviewModal(false)}
-        onSubmit={() => {
-          setShowReviewModal(false)
-          handleSubmitExam()
-        }}
-        onGoToQuestion={(index) => {
-          setCurrentQuestionIndex(index)
-          setShowReviewModal(false)
-        }}
-      />
-
-      {/* End Exam Confirmation Modal */}
+      {/* Submit Confirmation Modal */}
       <Modal
-        visible={showEndExamModal}
-        onDismiss={() => setShowEndExamModal(false)}
-        header="End Exam"
+        visible={showSubmitModal}
+        onDismiss={() => setShowSubmitModal(false)}
+        header="Submit Exam"
         footer={
           <Box float="right">
             <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setShowEndExamModal(false)}>
-                Continue Exam
+              <Button variant="link" onClick={() => setShowSubmitModal(false)}>
+                Cancel
               </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  setShowEndExamModal(false)
-                  if (examSession.examType === 'MOCK') {
-                    setShowReviewModal(true)
-                  } else {
-                    handleSubmitExam()
-                  }
-                }}
-                loading={submitExamMutation.isPending}
-              >
-                {examSession.examType === 'MOCK' ? 'Review & Submit' : 'Submit Exam'}
+              <Button variant="primary" onClick={handleSubmitExam}>
+                Submit Exam
               </Button>
             </SpaceBetween>
           </Box>
         }
       >
         <SpaceBetween direction="vertical" size="m">
-          <Alert type="warning" header="Are you sure you want to end this exam?">
-            <SpaceBetween direction="vertical" size="s">
-              <Box>
-                • You have answered {Object.keys(answers).length} of {examSession.questions.length} questions
-              </Box>
-              {markedForReview.length > 0 && (
-                <Box>
-                  • You have {markedForReview.length} questions marked for review
-                </Box>
-              )}
-              <Box>
-                • Once submitted, you cannot make any changes to your answers
-              </Box>
-              {examSession.examType === 'MOCK' && (
-                <Box>
-                  • Unanswered questions will be marked as incorrect
-                </Box>
-              )}
-            </SpaceBetween>
+          <Alert type="warning">
+            Are you sure you want to submit your exam? This action cannot be undone.
           </Alert>
+          <ColumnLayout columns={2}>
+            <div>
+              <strong>Answered Questions:</strong> {answeredCount}/{questions.length}
+            </div>
+            <div>
+              <strong>Marked for Review:</strong> {markedForReview.length}
+            </div>
+          </ColumnLayout>
+          {answeredCount < questions.length && (
+            <Alert type="info">
+              You have {questions.length - answeredCount} unanswered questions. 
+              These will be marked as incorrect.
+            </Alert>
+          )}
         </SpaceBetween>
       </Modal>
-    </div>
-  )
-}
 
-export default ExamInterface
+      {/* Exit Confirmation Modal */}
+      <Modal
+        visible={showExitModal}
+        onDismiss={() => setShowExitModal(false)}
+        header="Exit Exam"
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="link" onClick={() => setShowExitModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={onExamExit}>
+                Exit Exam
+              </Button>
+            </SpaceBetween>
+          </Box>
+        }
+      >
+        <Alert type="warning">
+          Are you sure you want to exit the exam? Your progress will be saved, 
+          but you may not be able to resume this session.
+        </Alert>
+      </Modal>
+    </div>
+  );
+};
+
+export default ExamInterface;

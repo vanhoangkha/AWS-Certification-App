@@ -1,0 +1,42 @@
+{
+  "version": "1",
+  "resourceName": "analyticsEngine",
+  "functionName": "analyticsEngine",
+  "roleName": "analyticsEngineLambdaRole",
+  "lambdaLayers": [],
+  "runtime": "nodejs18.x",
+  "timeout": 30,
+  "memorySize": 1024,
+  "build": true,
+  "dependsOn": [
+    {
+      "category": "api",
+      "resourceName": "awscertificationplatform",
+      "attributes": [
+        "GraphQLAPIIdOutput"
+      ]
+    },
+    {
+      "category": "storage",
+      "resourceName": "awscertplatformdb",
+      "attributes": [
+        "Name",
+        "Arn"
+      ]
+    }
+  ],
+  "environmentVariables": {
+    "RESULTS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "USER_PROGRESS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "QUESTIONS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    },
+    "EXAM_SESSIONS_TABLE_NAME": {
+      "Ref": "storageawscertplatformdbName"
+    }
+  }
+}

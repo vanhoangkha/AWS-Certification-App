@@ -1,4 +1,4 @@
-// Core data models for AWS Certification Practice Platform
+// Core Types for AWS Certification Practice Platform
 
 export interface UserProfile {
   userId: string
@@ -18,6 +18,18 @@ export interface UserPreferences {
   examReminders: boolean
 }
 
+export interface QuestionOption {
+  id: string
+  text: string
+  isCorrect?: boolean
+}
+
+export interface Reference {
+  title: string
+  url: string
+  type: 'documentation' | 'whitepaper' | 'faq' | 'blog'
+}
+
 export interface Question {
   questionId: string
   certification: string
@@ -35,16 +47,33 @@ export interface Question {
   updatedAt: string
 }
 
-export interface QuestionOption {
-  id: string
-  text: string
-  isCorrect: boolean
+export interface QuestionInput {
+  certification: string
+  domain: string
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD'
+  questionText: string
+  questionType: 'MCQ' | 'MRQ'
+  options: QuestionOption[]
+  correctAnswers: string[]
+  explanation: string
+  references: Reference[]
+  tags: string[]
+  createdBy: string
 }
 
-export interface Reference {
-  title: string
-  url: string
-  type: 'documentation' | 'whitepaper' | 'faq' | 'blog'
+export interface QuestionFilters {
+  certification?: string
+  domains?: string[]
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD'
+  tags?: string[]
+  limit?: number
+  nextToken?: string
+  createdBy?: string
+}
+
+export interface Answer {
+  selectedOptions: string[]
+  timestamp: string
 }
 
 export interface ExamSession {
@@ -52,41 +81,58 @@ export interface ExamSession {
   userId: string
   examType: 'MOCK' | 'PRACTICE' | 'CUSTOM'
   certification: string
-  questions: Question[]
+  questions: string[]
   answers: Record<string, Answer>
   startTime: string
   endTime?: string
   timeLimit: number
   status: 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED'
   markedForReview: string[]
-}
-
-export interface Answer {
-  questionId: string
-  selectedOptions: string[]
-  isCorrect?: boolean
-  timeSpent: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ExamResult {
   resultId: string
   sessionId: string
   userId: string
+  certification: string
+  examType: 'MOCK' | 'PRACTICE' | 'CUSTOM'
   scaledScore: number
   passed: boolean
-  domainBreakdown: DomainScore[]
+  domainBreakdown: Record<string, any>
   totalQuestions: number
   correctAnswers: number
   completedAt: string
   timeSpent: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface StartExamInput {
+  certification: string
+  examType: 'MOCK' | 'PRACTICE' | 'CUSTOM'
+  customOptions?: CustomExamOptions
+}
+
+export interface SaveProgressInput {
+  sessionId: string
+  answers: Record<string, Answer>
+  markedForReview?: string[]
+}
+
+export interface CustomExamOptions {
+  domains: string[]
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD'
+  questionCount: number
 }
 
 export interface DomainScore {
   domain: string
   score: number
+  percentage: number
   totalQuestions: number
   correctAnswers: number
-  percentage: number
 }
 
 export interface ExamTemplate {
@@ -97,6 +143,7 @@ export interface ExamTemplate {
   timeLimit: number
   totalQuestions: number
   domainDistribution: DomainDistribution[]
+  isActive: boolean
   createdBy: string
   createdAt: string
   updatedAt: string
@@ -109,84 +156,16 @@ export interface DomainDistribution {
   maxQuestions: number
 }
 
-// API Response types
-export interface ApiResponse<T> {
-  data: T
-  success: boolean
-  message?: string
-}
-
-export interface ErrorResponse {
-  error: {
-    code: string
-    message: string
-    details?: any
-    timestamp: string
-    requestId: string
-  }
-}
-
-// Authentication types
-export interface AuthResult {
-  user: UserProfile
-  accessToken: string
-  refreshToken: string
-  expiresIn: number
-}
-
-export interface UserCredentials {
-  email: string
-  password: string
-}
-
-// Exam types
-export interface StartExamInput {
-  certification: string
-  examType: 'MOCK' | 'PRACTICE' | 'CUSTOM'
-  customOptions?: CustomExamOptions
-}
-
-export interface CustomExamOptions {
-  domains: string[]
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'MIXED'
-  questionCount: number
-}
-
-export interface SaveProgressInput {
-  sessionId: string
-  answers: Record<string, Answer>
-  markedForReview: string[]
-}
-
-// Question management types
-export interface QuestionInput {
-  certification: string
-  domain: string
-  difficulty: 'EASY' | 'MEDIUM' | 'HARD'
-  questionText: string
-  questionType: 'MCQ' | 'MRQ'
-  options: Omit<QuestionOption, 'id'>[]
-  explanation: string
-  references: Reference[]
-  tags: string[]
-}
-
-export interface QuestionFilters {
-  certification?: string
-  domain?: string
-  difficulty?: 'EASY' | 'MEDIUM' | 'HARD'
-  tags?: string[]
-  createdBy?: string
-  limit?: number
-  nextToken?: string
-}
-
-export interface ImportResult {
+export interface ImportJob {
   jobId: string
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED'
+  fileName: string
   totalQuestions: number
   processedQuestions: number
   errors: ImportError[]
+  createdBy: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ImportError {
@@ -195,74 +174,172 @@ export interface ImportError {
   message: string
 }
 
-// Analytics types
-export interface ProgressData {
+export interface UserProgress {
   userId: string
-  examAttempts: ExamAttempt[]
+  certification: string
+  totalAttempts: number
+  bestScore: number
+  averageScore: number
   domainProgress: DomainProgress[]
   achievements: Achievement[]
-  streaks: Streak[]
-}
-
-export interface ExamAttempt {
-  sessionId: string
-  certification: string
-  examType: string
-  scaledScore: number
-  passed: boolean
-  completedAt: string
-  timeSpent: number
+  streaks: StreakData
+  lastActivity: string
+  updatedAt: string
 }
 
 export interface DomainProgress {
   domain: string
+  attempts: number
   averageScore: number
-  totalAttempts: number
-  improvement: number
-  lastAttempt: string
+  bestScore: number
+  trend: ScoreTrend[]
+}
+
+export interface ScoreTrend {
+  date: string
+  score: number
 }
 
 export interface Achievement {
   id: string
   title: string
   description: string
-  icon: string
   earnedAt: string
-  category: 'exam' | 'practice' | 'streak' | 'improvement'
 }
 
-export interface Streak {
-  type: 'daily' | 'weekly' | 'exam'
+export interface StreakData {
+  currentStreak: number
+  longestStreak: number
+  lastStudyDate: string | null
+}
+
+export interface ProgressData {
+  examAttempts: ExamResult[]
+  domainProgress: DomainProgress[]
+  achievements: Achievement[]
+  streaks: StreakData[]
+}
+
+// API Response Types
+export interface ApiResponse<T> {
+  data: T
+  success: boolean
+  message?: string
+  errors?: string[]
+}
+
+export interface PaginatedResponse<T> {
+  items: T[]
+  nextToken?: string
+  total: number
+}
+
+// Exam Configuration Types
+export interface ExamConfig {
+  certification: string
+  totalQuestions: number
+  timeLimit: number
+  passingScore: number
+  domains: ExamDomain[]
+}
+
+export interface ExamDomain {
+  name: string
+  weight: number
+  description: string
+}
+
+// Analytics Types
+export interface UserAnalytics {
+  overview: OverviewStats
+  performanceTrend: PerformanceTrend[]
+  domainAnalysis: DomainAnalysis[]
+  recommendations: Recommendation[]
+  achievements: Achievement[]
+  studyStreak: StreakData
+  weakAreas: string[]
+  readinessScore: number
+}
+
+export interface OverviewStats {
+  totalExams: number
+  averageScore: number
+  bestScore: number
+  passRate: number
+  improvementRate: number
+}
+
+export interface PerformanceTrend {
+  date: string
+  score: number
+  passed: boolean
+  certification: string
+  examType: string
+}
+
+export interface DomainAnalysis {
+  domain: string
+  attempts: number
+  averageScore: number
+  bestScore: number
+  worstScore: number
+  trend: ScoreTrend[]
+}
+
+export interface Recommendation {
+  type: 'FOCUS_AREA' | 'STRATEGY' | 'RESOURCE' | 'PRACTICE'
+  title: string
+  description: string
+  priority: 'HIGH' | 'MEDIUM' | 'LOW'
+  url?: string
+}
+
+// Component Props Types
+export interface QuestionComponentProps {
+  question: Question
+  selectedAnswers?: number[]
+  onAnswerChange?: (answers: number[]) => void
+  showExplanation?: boolean
+  disabled?: boolean
+}
+
+export interface ExamTimerProps {
+  timeLimit: number
+  startTime: string
+  onTimeUp: () => void
+  paused?: boolean
+}
+
+export interface ProgressBarProps {
   current: number
-  longest: number
-  lastActivity: string
+  total: number
+  variant?: 'default' | 'success' | 'warning' | 'error'
 }
 
-// Constants
-export const CERTIFICATIONS = {
-  'CLF-C01': 'AWS Certified Cloud Practitioner',
-  'SAA-C03': 'AWS Certified Solutions Architect - Associate',
-  'DVA-C01': 'AWS Certified Developer - Associate',
-  'SOA-C02': 'AWS Certified SysOps Administrator - Associate',
-  'SAP-C02': 'AWS Certified Solutions Architect - Professional',
-  'DOP-C02': 'AWS Certified DevOps Engineer - Professional',
-} as const
+// Error Types
+export interface AppError {
+  code: string
+  message: string
+  details?: any
+  timestamp: string
+}
 
-export const DOMAINS = {
-  'CLF-C01': [
-    'Cloud Concepts',
-    'Security and Compliance',
-    'Technology',
-    'Billing and Pricing'
-  ],
-  'SAA-C03': [
-    'Design Secure Architectures',
-    'Design Resilient Architectures',
-    'Design High-Performing Architectures',
-    'Design Cost-Optimized Architectures'
-  ],
-  // Add other certification domains as needed
-} as const
+// Theme Types
+export interface ThemeConfig {
+  mode: 'light' | 'dark'
+  primaryColor: string
+  secondaryColor: string
+  fontFamily: string
+}
 
-export type CertificationCode = keyof typeof CERTIFICATIONS
-export type DomainName = string
+// Notification Types
+export interface Notification {
+  id: string
+  type: 'success' | 'error' | 'warning' | 'info'
+  title: string
+  message: string
+  timestamp: string
+  read: boolean
+}
+
+// Export all types as default export to avoid conflicts
